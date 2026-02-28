@@ -2,13 +2,13 @@ CREATE TABLE audit_events (
   id uuid PRIMARY KEY,
   created_at timestamptz NOT NULL DEFAULT now(),
   version_id uuid, 
-  event_type text NOT NULL CHECK (event_type IN ('created','updated','deleted','member_added','member_removed','role_change')),
-CHECK (
-  (event_type IN ('created','updated','deleted') AND version_id IS NOT NULL AND target_user_id IS NULL)
+  -- create, delete are for version events, member_added, member_removed, role_change are for membership events, udpate is for project info update like description, name, etc, In practice, updated content will not be stored. Just print, project setting updated.
+  event_type text NOT NULL CHECK (
+  (event_type IN ('created','updated','deleted') AND version_id IS NOT NULL AND actor_user_id IS NOT NULL)
   OR
-  (event_type IN ('member_added','member_removed','role_change') AND version_id IS NULL AND target_user_id IS NOT NULL)
-)
-, -- Type of event
+  (event_type IN ('member_added','member_removed','role_change') AND project_id IS NOT NULL AND target_user_id IS NOT NULL)
+),
+ -- Type of event
   actor_user_id uuid NOT NULL, -- Foreign key to users table
   project_id uuid NOT NULL, -- Foreign key to projects table
     target_user_id uuid,
